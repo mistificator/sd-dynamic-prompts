@@ -45,9 +45,9 @@ def get_seeds(
     return all_seeds, all_subseeds
 
 
-def should_freeze_prompt(p):
+def should_freeze_prompt(p, use_always_random_prompt):
     # When using a variation seed, the prompt shouldn't change between generations
-    return p.subseed_strength > 0
+    return p.subseed_strength > 0 and not use_always_random_prompt
 
 
 def load_magicprompt_models(models_file: Path | None = None) -> list[str]:

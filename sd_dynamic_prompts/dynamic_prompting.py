@@ -289,6 +289,12 @@ class Script(scripts.Script):
                             "Some settings have been moved to the settings tab. Find them in the Dynamic Prompts section.",
                         )
 
+                        use_always_random_prompt = gr.Checkbox(
+                            label="Always random prompt",
+                            value=True,
+                            elem_id=make_element_id("always-random-prompt"),
+                        )
+
                         unlink_seed_from_prompt = gr.Checkbox(
                             label="Unlink seed from prompt",
                             value=False,
@@ -332,6 +338,7 @@ class Script(scripts.Script):
             max_attention,
             magic_prompt_length,
             magic_temp_value,
+            use_always_random_prompt,
             use_fixed_seed,
             unlink_seed_from_prompt,
             disable_negative_prompt,
@@ -355,6 +362,7 @@ class Script(scripts.Script):
         max_attention: float,
         magic_prompt_length: int,
         magic_temp_value: float,
+        use_always_random_prompt: bool,
         use_fixed_seed: bool,
         unlink_seed_from_prompt: bool,
         disable_negative_prompt: bool,
@@ -455,7 +463,7 @@ class Script(scripts.Script):
                 .set_unlink_seed_from_prompt(unlink_seed_from_prompt)
                 .set_seed(original_seed)
                 .set_context(p)
-                .set_freeze_prompt(should_freeze_prompt(p))
+                .set_freeze_prompt(should_freeze_prompt(p, use_always_random_prompt))
             )
 
             generator = generator_builder.create_generator()
@@ -467,15 +475,22 @@ class Script(scripts.Script):
                 negative_generator = generator
 
             all_seeds = None
-            if num_images and not unlink_seed_from_prompt:
-                p.all_seeds, p.all_subseeds = get_seeds(
-                    p,
-                    num_images,
-                    use_fixed_seed,
-                    is_combinatorial,
-                    combinatorial_batches,
-                )
-                all_seeds = p.all_seeds
+            if num_images:
+                if not unlink_seed_from_prompt:
+                    p.all_seeds, p.all_subseeds = get_seeds(
+                        p,
+                        num_images,
+                        use_fixed_seed,
+                        is_combinatorial,
+                        combinatorial_batches,
+                    )
+                    all_seeds = p.all_seeds
+                if use_always_random_prompt:
+                    all_seeds = [p.seed + i for i in range(num_images)]
+                    logger.info(
+                        f"Use always random prompt: {len(all_seeds)} seeds",
+                    )                
+                
 
             all_prompts, all_negative_prompts = generate_prompts(
                 prompt_generator=generator,
