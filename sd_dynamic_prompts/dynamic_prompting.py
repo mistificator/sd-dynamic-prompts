@@ -486,11 +486,7 @@ class Script(scripts.Script):
                     )
                     all_seeds = p.all_seeds
                 if use_always_random_prompt:
-                    all_seeds = [p.seed + i for i in range(num_images)]
-                    logger.info(
-                        f"Use always random prompt: {len(all_seeds)} seeds",
-                    )                
-                
+                    all_seeds = [p.seed + p.subseed + i for i in range(num_images)]                
 
             all_prompts, all_negative_prompts = generate_prompts(
                 prompt_generator=generator,

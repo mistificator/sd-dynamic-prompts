@@ -20,7 +20,10 @@ def get_seeds(
 ) -> tuple[list[int], list[int]]:
     if p.subseed_strength != 0:
         seed = int(p.all_seeds[0])
-        subseed = int(p.all_subseeds[0])
+        if not use_fixed_seed:
+            subseed = int(p.all_subseeds[0])
+        else:
+            subseed = int(p.subseed)
     else:
         seed = int(p.seed)
         subseed = int(p.subseed)
@@ -33,7 +36,7 @@ def get_seeds(
                 all_seeds.extend([seed + i] * (num_seeds // combinatorial_batches))
         else:
             all_seeds = [seed] * num_seeds
-            all_subseeds = [subseed] * num_seeds
+            all_subseeds = [subseed + i for i in range(num_seeds)]
     else:
         if p.subseed_strength == 0:
             all_seeds = [seed + i for i in range(num_seeds)]
